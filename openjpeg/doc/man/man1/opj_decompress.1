@@ -29,10 +29,10 @@
 .SP
 .fi
 ..
-.TH opj_decompress 1 "Version 1.4.0" "opj_decompress" "converts jpeg2000 files"
+.TH opj_decompress 1 "Version 2.1.1" "opj_decompress" "converts jpeg2000 files"
 .P
 .SH NAME
-opj_decompress - 
+opj_decompress \- 
 This program reads in a jpeg2000 image and converts it to another 
 image type. It is part of the OpenJPEG library.
 .SP
@@ -43,13 +43,13 @@ Valid output image extensions are
 .B .bmp, .pgm, .pgx, .png, .pnm, .ppm, .raw, .tga, .tif \fR. For PNG resp. TIF it needs libpng resp. libtiff .
 .SH SYNOPSIS
 .P
-.B opj_decompress -i \fRinfile.j2k \fB-o \fRoutfile.png
+.B opj_decompress \-i \fRinfile.j2k \fB-o \fRoutfile.png
 .P
-.B opj_decompress -ImgDir \fRimages/ \fB-OutFor \fRbmp
+.B opj_decompress \-ImgDir \fRimages/ \fB-OutFor \fRbmp
 .P
-.B opj_decompress -h  \fRPrint help message and exit
+.B opj_decompress \-h  \fRPrint help message and exit
 .P
-.R See JPWL OPTIONS for special options
+See JPWL OPTIONS for special options
 .SH OPTIONS
 .TP
 .B \-\^i "name"
@@ -73,9 +73,19 @@ n is the maximum number of quality layers to decode. See LAYERS below)
 .B \-\^OutFor "ext"
 (extension for output files)
 .P
+.SH JPIP OPTIONS
+Options usable only if the library has been compiled with
+.B BUILD_JPIP
+.TP
+.B -jpip
+Embed index table box into the output JP2 file (compulsory for JPIP)
+.TP
+.B -TP R
+Partition a tile into tile parts of different resolution levels (compulsory for JPT-stream)
+.P
 .SH JPWL OPTIONS
 Options usable only if the library has been compiled with
-.B -DUSE_JPWL
+.B BUILD_JPWL
 .TP
 .B -W c\fR[=Nc] (Nc is the  number of expected components in the codestream; default:3)
 .TP
@@ -91,9 +101,9 @@ Set the maximum number of quality layers to decode. If there are less quality la
 .P
 '\".SH BUGS
 .SH AUTHORS
-Copyright (c) 2002-2007, Communications and Remote Sensing Laboratory, Universite catholique de Louvain (UCL), Belgium
+Copyright (c) 2002-2014, Universite catholique de Louvain (UCL), Belgium
 .br
-Copyright (c) 2002-2007, Professor Benoit Macq
+Copyright (c) 2002-2014, Professor Benoit Macq
 .br
 Copyright (c) 2001-2003, David Janssens
 .br

@@ -1,4 +1,9 @@
 /*
+ * The copyright in this software is being made available under the 2-clauses
+ * BSD License, included below. This software may be subject to other third
+ * party and contributor rights, including patent rights, and no such rights
+ * are granted under this license.
+ *
  * Copyright (c) 2001-2003, David Janssens
  * Copyright (c) 2002-2003, Yannick Verschueren
  * Copyright (c) 2003-2005, Francois Devaux and Antonin Descampe
@@ -30,7 +35,7 @@
 
 #ifndef __BIO_H
 #define __BIO_H
-/** 
+/**
 @file bio.h
 @brief Implementation of an individual bit input-output (BIO)
 
@@ -44,23 +49,23 @@ The functions in BIO.C have for goal to realize an individual bit input - output
 Individual bit input-output stream (BIO)
 */
 typedef struct opj_bio {
-/** pointer to the start of the buffer */
-	unsigned char *start;	
-/** pointer to the end of the buffer */
-	unsigned char *end;		
-/** pointer to the present position in the buffer */
-	unsigned char *bp;		
-/** temporary place where each byte is read or written */
-	unsigned int buf;		
-/** coder : number of bits free to write. decoder : number of bits read */
-	int ct;					
+    /** pointer to the start of the buffer */
+    unsigned char *start;
+    /** pointer to the end of the buffer */
+    unsigned char *end;
+    /** pointer to the present position in the buffer */
+    unsigned char *bp;
+    /** temporary place where each byte is read or written */
+    unsigned int buf;
+    /** coder : number of bits free to write. decoder : number of bits read */
+    int ct;
 } opj_bio_t;
 
 /** @name Funciones generales */
 /*@{*/
 /* ----------------------------------------------------------------------- */
 /**
-Create a new BIO handle 
+Create a new BIO handle
 @return Returns a new BIO handle if successful, returns NULL otherwise
 */
 opj_bio_t* bio_create(void);
@@ -79,14 +84,14 @@ int bio_numbytes(opj_bio_t *bio);
 Init encoder
 @param bio BIO handle
 @param bp Output buffer
-@param len Output buffer length 
+@param len Output buffer length
 */
 void bio_init_enc(opj_bio_t *bio, unsigned char *bp, int len);
 /**
 Init decoder
 @param bio BIO handle
 @param bp Input buffer
-@param len Input buffer length 
+@param len Input buffer length
 */
 void bio_init_dec(opj_bio_t *bio, unsigned char *bp, int len);
 /**
@@ -99,7 +104,7 @@ void bio_write(opj_bio_t *bio, int v, int n);
 /**
 Read bits
 @param bio BIO handle
-@param n Number of bits to read 
+@param n Number of bits to read
 @return Returns the corresponding read number
 */
 int bio_read(opj_bio_t *bio, int n);
