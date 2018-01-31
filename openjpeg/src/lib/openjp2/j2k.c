@@ -9026,6 +9026,9 @@ static OPJ_BOOL opj_j2k_update_image_data(opj_tcd_t * p_tcd,
 
         /* Copy info from decoded comp image to output image */
         l_img_comp_dest->resno_decoded = l_img_comp_src->resno_decoded;
+// [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.3
+        l_img_comp_dest->factor = l_img_comp_src->factor;
+// [/SL:KB]
 
         if (p_tcd->whole_tile_decoding) {
             opj_tcd_resolution_t* l_res = l_tilec->resolutions +
@@ -10685,6 +10688,10 @@ static OPJ_BOOL opj_j2k_decode_tiles(opj_j2k_t *p_j2k,
                 p_j2k->m_tcd->tcd_image->tiles->comps[i].data;
             p_j2k->m_output_image->comps[i].resno_decoded =
                 p_j2k->m_tcd->image->comps[i].resno_decoded;
+// [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.3
+            p_j2k->m_output_image->comps[i].factor =
+                p_j2k->m_tcd->image->comps[i].factor;
+// [/SL:KB]
             p_j2k->m_tcd->tcd_image->tiles->comps[i].data = NULL;
         }
 
@@ -10931,6 +10938,10 @@ static OPJ_BOOL opj_j2k_move_data_from_codec_to_output_image(opj_j2k_t * p_j2k,
                    sizeof(opj_image_comp_t));
             newcomps[compno].resno_decoded =
                 p_j2k->m_output_image->comps[src_compno].resno_decoded;
+// [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.3
+            newcomps[compno].factor =
+                p_j2k->m_output_image->comps[src_compno].factor;
+// [/SL:KB]
             newcomps[compno].data = p_j2k->m_output_image->comps[src_compno].data;
             p_j2k->m_output_image->comps[src_compno].data = NULL;
         }
@@ -10946,6 +10957,10 @@ static OPJ_BOOL opj_j2k_move_data_from_codec_to_output_image(opj_j2k_t * p_j2k,
         for (compno = 0; compno < p_image->numcomps; compno++) {
             p_image->comps[compno].resno_decoded =
                 p_j2k->m_output_image->comps[compno].resno_decoded;
+// [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.3
+            p_image->comps[compno].factor =
+                p_j2k->m_output_image->comps[compno].factor;
+// [/SL:KB]
             opj_image_data_free(p_image->comps[compno].data);
             p_image->comps[compno].data = p_j2k->m_output_image->comps[compno].data;
 #if 0

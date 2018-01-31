@@ -799,6 +799,9 @@ static INLINE OPJ_BOOL opj_tcd_init_tile(opj_tcd_t *p_tcd, OPJ_UINT32 p_tile_no,
     for (compno = 0; compno < l_tile->numcomps; ++compno) {
         /*fprintf(stderr, "compno = %d/%d\n", compno, l_tile->numcomps);*/
         l_image_comp->resno_decoded = 0;
+// [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.3
+        l_image_comp->factor = (l_tile->comps[compno].numresolutions > 1) ? l_tile->comps[compno].numresolutions - 1 : 0;
+// [/SL:KB]
         /* border of each l_tile component (global) */
         l_tilec->x0 = opj_int_ceildiv(l_tile->x0, (OPJ_INT32)l_image_comp->dx);
         l_tilec->y0 = opj_int_ceildiv(l_tile->y0, (OPJ_INT32)l_image_comp->dy);

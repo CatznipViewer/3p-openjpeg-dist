@@ -410,6 +410,12 @@ OPJ_BOOL opj_t2_decode_packets(opj_tcd_t* tcd,
         return OPJ_FALSE;
     }
 
+// [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.3
+	for (int i = 0; i < l_image->numcomps; i++)
+	{
+		l_image->comps[i].factor = (p_tile->comps[i].numresolutions > 1) ? p_tile->comps[i].numresolutions - 1 : 0;
+	}
+// [/SL:KB]
 
     l_current_pi = l_pi;
 
@@ -498,6 +504,9 @@ OPJ_BOOL opj_t2_decode_packets(opj_tcd_t* tcd,
                 l_img_comp = &(l_image->comps[l_current_pi->compno]);
                 l_img_comp->resno_decoded = opj_uint_max(l_current_pi->resno,
                                             l_img_comp->resno_decoded);
+// [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.3
+                l_img_comp->factor = (p_tile->comps[l_current_pi->compno].numresolutions > 1) ? p_tile->comps[l_current_pi->compno].numresolutions - l_img_comp->resno_decoded - 1 : 0;
+// [/SL:KB]
             } else {
                 l_nb_bytes_read = 0;
                 if (! opj_t2_skip_packet(p_t2, p_tile, l_tcp, l_current_pi, l_current_data,
@@ -513,6 +522,9 @@ OPJ_BOOL opj_t2_decode_packets(opj_tcd_t* tcd,
                 if (l_img_comp->resno_decoded == 0) {
                     l_img_comp->resno_decoded =
                         p_tile->comps[l_current_pi->compno].minimum_num_resolutions - 1;
+// [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.3
+                    l_img_comp->factor = (p_tile->comps[l_current_pi->compno].numresolutions > 1) ? p_tile->comps[l_current_pi->compno].numresolutions - l_img_comp->resno_decoded - 1 : 0;
+// [/SL:KB]
                 }
             }
 
