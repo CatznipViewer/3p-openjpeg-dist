@@ -46,10 +46,12 @@ pushd "$OPENJPEG_SOURCE_DIR"
             build_sln "OPENJPEG.sln" "Release|$AUTOBUILD_WIN_VSPLATFORM" "openjp2"
             mkdir -p "$stage/lib/release"
 
-            cp bin/Release/openjp2{.dll,.lib} "$stage/lib/release"
+            cp bin/Release/openjp2{.dll,.lib,.pdb} "$stage/lib/release"
             mkdir -p "$stage/include/openjpeg"
 
             cp src/lib/openjp2/openjpeg.h "$stage/include/openjpeg/"
+            cp src/lib/openjp2/opj_config.h "$stage/include/openjpeg/"
+            cp src/lib/openjp2/opj_stdint.h "$stage/include/openjpeg/"
         ;;
 
         darwin*)
@@ -66,6 +68,8 @@ pushd "$OPENJPEG_SOURCE_DIR"
             # For backwards compatibility, rename libopenjp2.a to libopenjpeg.a.
             mv -v "$(grep '/libopenjp2.a$' install_manifest.txt)" "$stage/lib/release/libopenjpeg.a"
             mv -v "$(grep '/openjpeg.h$' install_manifest.txt)" "$stage/include/openjpeg/"
+            mv -v "$(grep '/opj_config.h$' install_manifest.txt)" "$stage/include/openjpeg/"
+            mv -v "$(grep '/opj_stdint.h$' install_manifest.txt)" "$stage/include/openjpeg/"
         ;;
 
         linux*)
@@ -98,6 +102,8 @@ pushd "$OPENJPEG_SOURCE_DIR"
             # For backwards compatibility, rename libopenjp2.a to libopenjpeg.a.
             mv -v "$(grep '/libopenjp2.a$' install_manifest.txt)" "$stage/lib/release/libopenjpeg.a"
             mv -v "$(grep '/openjpeg.h$' install_manifest.txt)" "$stage/include/openjpeg/"
+            mv -v "$(grep '/opj_config.h$' install_manifest.txt)" "$stage/include/openjpeg/"
+            mv -v "$(grep '/opj_stdint.h$' install_manifest.txt)" "$stage/include/openjpeg/"
         ;;
     esac
     mkdir -p "$stage/LICENSES"
