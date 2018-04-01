@@ -516,12 +516,17 @@ OPJ_BOOL opj_t2_decode_packets(opj_tcd_t* tcd,
                     return OPJ_FALSE;
                 }
 
-                l_img_comp = &(l_image->comps[l_current_pi->compno]);
-                l_img_comp->resno_decoded = opj_uint_max(l_current_pi->resno,
-                                            l_img_comp->resno_decoded);
 // [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.3
-                l_img_comp->factor = (p_tile->comps[l_current_pi->compno].numresolutions > 1) ? p_tile->comps[l_current_pi->compno].numresolutions - l_img_comp->resno_decoded - 1 : 0;
+				if (l_nb_bytes_read != UINT32_MAX)
+				{
+					l_img_comp = &(l_image->comps[l_current_pi->compno]);
+					l_img_comp->resno_decoded = opj_uint_max(l_current_pi->resno, l_img_comp->resno_decoded);
+					l_img_comp->factor = (p_tile->comps[l_current_pi->compno].numresolutions > 1) ? p_tile->comps[l_current_pi->compno].numresolutions - l_img_comp->resno_decoded - 1 : 0;
+				}
 // [/SL:KB]
+//                l_img_comp = &(l_image->comps[l_current_pi->compno]);
+//                l_img_comp->resno_decoded = opj_uint_max(l_current_pi->resno,
+//                                            l_img_comp->resno_decoded);
             } else {
                 l_nb_bytes_read = 0;
 //                if (! opj_t2_skip_packet(p_t2, p_tile, l_tcp, l_current_pi, l_current_data,
@@ -541,11 +546,19 @@ OPJ_BOOL opj_t2_decode_packets(opj_tcd_t* tcd,
 			if (l_nb_bytes_read == UINT32_MAX)
 			{
 				// We ran out of packet data so we've decoded as much as we're going to be able to (recoverable)
+				OPJ_UINT32 resno_decoded = 0;
 				for (OPJ_UINT32 idxComp = 0; idxComp < l_image->numcomps; idxComp++)
 				{
-					l_image->comps[idxComp].resno_decoded = p_tile->comps[idxComp].minimum_num_resolutions - 1;
+					if (resno_decoded < l_image->comps[idxComp].resno_decoded)
+						resno_decoded = l_image->comps[idxComp].resno_decoded;
+				}
+
+				for (OPJ_UINT32 idxComp = 0; idxComp < l_image->numcomps; idxComp++)
+				{
+					l_image->comps[idxComp].resno_decoded = p_tile->comps[idxComp].minimum_num_resolutions - 1/*resno_decoded*/;
 					l_image->comps[idxComp].factor = (p_tile->comps[idxComp].numresolutions > 1) ? p_tile->comps[idxComp].numresolutions - l_image->comps[idxComp].resno_decoded - 1 : 0;
 				}
+
 				opj_pi_destroy(l_pi, l_nb_pocs);
 				opj_free(first_pass_failed);
 				return OPJ_TRUE;
