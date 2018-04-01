@@ -39,9 +39,6 @@
 #ifndef OPENJPEG_H
 #define OPENJPEG_H
 
-#define OPENJPEG_VERSION "2.0.0"
-
-
 /*
 ==========================================================
    Compiler directives
