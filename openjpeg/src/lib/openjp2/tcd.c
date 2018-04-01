@@ -1620,7 +1620,7 @@ OPJ_BOOL opj_tcd_decode_tile(opj_tcd_t *p_tcd,
 // [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.4
     if (! opj_tcd_t2_decode(p_tcd, p_src, p_max_length, p_cstr_index, p_manager)) {
 // [/SL:KB]
-//        return OPJ_FALSE;
+        return OPJ_FALSE;
     }
     /* FIXME _ProfStop(PGROUP_T2); */
 
@@ -1628,7 +1628,7 @@ OPJ_BOOL opj_tcd_decode_tile(opj_tcd_t *p_tcd,
 
     /* FIXME _ProfStart(PGROUP_T1); */
     if (! opj_tcd_t1_decode(p_tcd, p_manager)) {
-//        return OPJ_FALSE;
+        return OPJ_FALSE;
     }
     /* FIXME _ProfStop(PGROUP_T1); */
 
