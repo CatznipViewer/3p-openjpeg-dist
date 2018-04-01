@@ -370,15 +370,25 @@ static void opj_null_jas_fprintf(FILE* file, const char * format, ...)
 #define JAS_FPRINTF opj_null_jas_fprintf
 #endif
 
+//OPJ_BOOL opj_t2_decode_packets(opj_tcd_t* tcd,
+//                               opj_t2_t *p_t2,
+//                               OPJ_UINT32 p_tile_no,
+//                               opj_tcd_tile_t *p_tile,
+//                               OPJ_BYTE *p_src,
+//                               OPJ_UINT32 * p_data_read,
+//                               OPJ_UINT32 p_max_len,
+//                               opj_codestream_index_t *p_cstr_index,
+//                               opj_event_mgr_t *p_manager)
+// [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.4
 OPJ_BOOL opj_t2_decode_packets(opj_tcd_t* tcd,
                                opj_t2_t *p_t2,
                                OPJ_UINT32 p_tile_no,
                                opj_tcd_tile_t *p_tile,
                                OPJ_BYTE *p_src,
-                               OPJ_UINT32 * p_data_read,
                                OPJ_UINT32 p_max_len,
                                opj_codestream_index_t *p_cstr_index,
                                opj_event_mgr_t *p_manager)
+// [/SL:KB]
 {
     OPJ_BYTE *l_current_data = p_src;
     opj_pi_iterator_t *l_pi = 00;
@@ -494,8 +504,13 @@ OPJ_BOOL opj_t2_decode_packets(opj_tcd_t* tcd,
 
                 first_pass_failed[l_current_pi->compno] = OPJ_FALSE;
 
+//                if (! opj_t2_decode_packet(p_t2, p_tile, l_tcp, l_current_pi, l_current_data,
+//                                           &l_nb_bytes_read, p_max_len, l_pack_info, p_manager)) {
+// [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.4
                 if (! opj_t2_decode_packet(p_t2, p_tile, l_tcp, l_current_pi, l_current_data,
-                                           &l_nb_bytes_read, p_max_len, l_pack_info, p_manager)) {
+                                           &l_nb_bytes_read, p_max_len, l_pack_info, p_manager) &&
+				    l_nb_bytes_read != UINT32_MAX) {
+// [/SL:KB]
                     opj_pi_destroy(l_pi, l_nb_pocs);
                     opj_free(first_pass_failed);
                     return OPJ_FALSE;
@@ -509,13 +524,33 @@ OPJ_BOOL opj_t2_decode_packets(opj_tcd_t* tcd,
 // [/SL:KB]
             } else {
                 l_nb_bytes_read = 0;
-                if (! opj_t2_skip_packet(p_t2, p_tile, l_tcp, l_current_pi, l_current_data,
-                                         &l_nb_bytes_read, p_max_len, l_pack_info, p_manager)) {
+//                if (! opj_t2_skip_packet(p_t2, p_tile, l_tcp, l_current_pi, l_current_data,
+//                                         &l_nb_bytes_read, p_max_len, l_pack_info, p_manager)) {
+// [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.4
+                if (! opj_t2_skip_packet(p_t2, p_tile, l_tcp, l_current_pi, l_current_data, 
+                                         &l_nb_bytes_read, p_max_len, l_pack_info, p_manager) &&
+				    l_nb_bytes_read != UINT32_MAX) {
+// [/SL:KB]
                     opj_pi_destroy(l_pi, l_nb_pocs);
                     opj_free(first_pass_failed);
                     return OPJ_FALSE;
                 }
             }
+
+// [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.4
+			if (l_nb_bytes_read == UINT32_MAX)
+			{
+				// We ran out of packet data so we've decoded as much as we're going to be able to (recoverable)
+				for (OPJ_UINT32 idxComp = 0; idxComp < l_image->numcomps; idxComp++)
+				{
+					l_image->comps[idxComp].resno_decoded = p_tile->comps[idxComp].minimum_num_resolutions - 1;
+					l_image->comps[idxComp].factor = (p_tile->comps[idxComp].numresolutions > 1) ? p_tile->comps[idxComp].numresolutions - l_image->comps[idxComp].resno_decoded - 1 : 0;
+				}
+				opj_pi_destroy(l_pi, l_nb_pocs);
+				opj_free(first_pass_failed);
+				return OPJ_TRUE;
+			}
+// [/SL:KB]
 
             if (first_pass_failed[l_current_pi->compno]) {
                 l_img_comp = &(l_image->comps[l_current_pi->compno]);
@@ -576,7 +611,7 @@ OPJ_BOOL opj_t2_decode_packets(opj_tcd_t* tcd,
 
     /* don't forget to release pi */
     opj_pi_destroy(l_pi, l_nb_pocs);
-    *p_data_read = (OPJ_UINT32)(l_current_data - p_src);
+//    *p_data_read = (OPJ_UINT32)(l_current_data - p_src);
     return OPJ_TRUE;
 }
 
@@ -641,6 +676,10 @@ static OPJ_BOOL opj_t2_decode_packet(opj_t2_t* p_t2,
 
         if (! opj_t2_read_packet_data(p_t2, p_tile, p_pi, p_src, &l_nb_bytes_read,
                                       p_max_length, p_pack_info, p_manager)) {
+// [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.4
+			if (l_nb_bytes_read == UINT32_MAX)
+				*p_data_read = UINT32_MAX;
+// [/SL:KB]
             return OPJ_FALSE;
         }
 
@@ -993,7 +1032,11 @@ static OPJ_BOOL opj_t2_skip_packet(opj_t2_t* p_t2,
 
         if (! opj_t2_skip_packet_data(p_t2, p_tile, p_pi, &l_nb_bytes_read,
                                       p_max_length, p_pack_info, p_manager)) {
-            return OPJ_FALSE;
+ // [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.4
+			if (l_nb_bytes_read == UINT32_MAX)
+				*p_data_read = UINT32_MAX;
+// [/SL:KB]
+           return OPJ_FALSE;
         }
 
         l_nb_total_bytes_read += l_nb_bytes_read;
@@ -1345,15 +1388,29 @@ static OPJ_BOOL opj_t2_read_packet_data(opj_t2_t* p_t2,
 
             do {
                 /* Check possible overflow (on l_current_data only, assumes input args already checked) then size */
+// [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.4
                 if ((((OPJ_SIZE_T)l_current_data + (OPJ_SIZE_T)l_seg->newlen) <
-                        (OPJ_SIZE_T)l_current_data) ||
-                        (l_current_data + l_seg->newlen > p_src_data + p_max_length)) {
+                        (OPJ_SIZE_T)l_current_data) ) {
+                    opj_event_msg(p_manager, EVT_ERROR,
+                                  "read: segment too long (%d) with max (%d) for codeblock %d (p=%d, b=%d, r=%d, c=%d)\n",
+                                  l_seg->newlen, p_max_length, cblkno, p_pi->precno, bandno, p_pi->resno,
+                                  p_pi->compno);
+                    return OPJ_FALSE;
+                }
+                if (l_current_data + l_seg->newlen > p_src_data + p_max_length) {
+					*p_data_read = UINT32_MAX;
+                    return OPJ_FALSE;
+                }
+// [/SL:KB]
+//                if ((((OPJ_SIZE_T)l_current_data + (OPJ_SIZE_T)l_seg->newlen) <
+//                        (OPJ_SIZE_T)l_current_data) ||
+//                        (l_current_data + l_seg->newlen > p_src_data + p_max_length)) {
 //                    opj_event_msg(p_manager, EVT_ERROR,
 //                                  "read: segment too long (%d) with max (%d) for codeblock %d (p=%d, b=%d, r=%d, c=%d)\n",
 //                                  l_seg->newlen, p_max_length, cblkno, p_pi->precno, bandno, p_pi->resno,
 //                                  p_pi->compno);
-                    return OPJ_FALSE;
-                }
+//                    return OPJ_FALSE;
+//                }
 
 #ifdef USE_JPWL
                 /* we need here a j2k handle to verify if making a check to
@@ -1475,14 +1532,22 @@ static OPJ_BOOL opj_t2_skip_packet_data(opj_t2_t* p_t2,
 
             do {
                 /* Check possible overflow then size */
+// [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.4
                 if (((*p_data_read + l_seg->newlen) < (*p_data_read)) ||
                         ((*p_data_read + l_seg->newlen) > p_max_length)) {
+
+					*p_data_read = UINT32_MAX;
+                    return OPJ_FALSE;
+                }
+// [/SL:KB]
+//                if (((*p_data_read + l_seg->newlen) < (*p_data_read)) ||
+//                        ((*p_data_read + l_seg->newlen) > p_max_length)) {
 //                    opj_event_msg(p_manager, EVT_ERROR,
 //                                  "skip: segment too long (%d) with max (%d) for codeblock %d (p=%d, b=%d, r=%d, c=%d)\n",
 //                                  l_seg->newlen, p_max_length, cblkno, p_pi->precno, bandno, p_pi->resno,
 //                                  p_pi->compno);
-                    return OPJ_FALSE;
-                }
+//                    return OPJ_FALSE;
+//                }
 
 #ifdef USE_JPWL
                 /* we need here a j2k handle to verify if making a check to

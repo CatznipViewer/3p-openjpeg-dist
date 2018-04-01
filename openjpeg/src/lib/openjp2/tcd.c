@@ -151,12 +151,19 @@ Free the memory allocated for encoding
 static void opj_tcd_free_tile(opj_tcd_t *tcd);
 
 
+// [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.4
 static OPJ_BOOL opj_tcd_t2_decode(opj_tcd_t *p_tcd,
                                   OPJ_BYTE * p_src_data,
-                                  OPJ_UINT32 * p_data_read,
                                   OPJ_UINT32 p_max_src_size,
                                   opj_codestream_index_t *p_cstr_index,
                                   opj_event_mgr_t *p_manager);
+// [/SL:KB]
+//static OPJ_BOOL opj_tcd_t2_decode(opj_tcd_t *p_tcd,
+//                                  OPJ_BYTE * p_src_data,
+//                                  OPJ_UINT32 * p_data_read,
+//                                  OPJ_UINT32 p_max_src_size,
+//                                  opj_codestream_index_t *p_cstr_index,
+//                                  opj_event_mgr_t *p_manager);
 
 static OPJ_BOOL opj_tcd_t1_decode(opj_tcd_t *p_tcd,
                                   opj_event_mgr_t *p_manager);
@@ -1454,7 +1461,7 @@ OPJ_BOOL opj_tcd_decode_tile(opj_tcd_t *p_tcd,
                              opj_event_mgr_t *p_manager
                             )
 {
-    OPJ_UINT32 l_data_read;
+//    OPJ_UINT32 l_data_read;
     OPJ_UINT32 compno;
 
     p_tcd->tcd_tileno = p_tile_no;
@@ -1607,9 +1614,12 @@ OPJ_BOOL opj_tcd_decode_tile(opj_tcd_t *p_tcd,
 
     /*--------------TIER2------------------*/
     /* FIXME _ProfStart(PGROUP_T2); */
-    l_data_read = 0;
-    if (! opj_tcd_t2_decode(p_tcd, p_src, &l_data_read, p_max_length, p_cstr_index,
-                            p_manager)) {
+//    l_data_read = 0;
+//    if (! opj_tcd_t2_decode(p_tcd, p_src, &l_data_read, p_max_length, p_cstr_index,
+//                            p_manager)) {
+// [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.4
+    if (! opj_tcd_t2_decode(p_tcd, p_src, p_max_length, p_cstr_index, p_manager)) {
+// [/SL:KB]
 //        return OPJ_FALSE;
     }
     /* FIXME _ProfStop(PGROUP_T2); */
@@ -1904,13 +1914,21 @@ static void opj_tcd_free_tile(opj_tcd_t *p_tcd)
 }
 
 
+//static OPJ_BOOL opj_tcd_t2_decode(opj_tcd_t *p_tcd,
+//                                  OPJ_BYTE * p_src_data,
+//                                  OPJ_UINT32 * p_data_read,
+//                                  OPJ_UINT32 p_max_src_size,
+//                                  opj_codestream_index_t *p_cstr_index,
+//                                  opj_event_mgr_t *p_manager
+//                                 )
+// [SL:KB] - Patch: OpenJpeg-PartialDecode | Checked: Catznip-5.4
 static OPJ_BOOL opj_tcd_t2_decode(opj_tcd_t *p_tcd,
                                   OPJ_BYTE * p_src_data,
-                                  OPJ_UINT32 * p_data_read,
                                   OPJ_UINT32 p_max_src_size,
                                   opj_codestream_index_t *p_cstr_index,
                                   opj_event_mgr_t *p_manager
                                  )
+// [/SL:KB]
 {
     opj_t2_t * l_t2;
 
@@ -1925,7 +1943,7 @@ static OPJ_BOOL opj_tcd_t2_decode(opj_tcd_t *p_tcd,
                 p_tcd->tcd_tileno,
                 p_tcd->tcd_image->tiles,
                 p_src_data,
-                p_data_read,
+//                p_data_read,
                 p_max_src_size,
                 p_cstr_index,
                 p_manager)) {
