@@ -734,7 +734,11 @@ static OPJ_BOOL opj_t2_encode_packet(OPJ_UINT32 tileno,
 // [SL:KB] - Patch: OpenJpeg-KDUDecodeFail | Checked: Catznip-5.4
     OPJ_BOOL packet_empty = OPJ_FALSE;
 // [/SL:KB]
+//#ifdef ENABLE_EMPTY_PACKET_OPTIMIZATION
 //    OPJ_BOOL packet_empty = OPJ_TRUE;
+//#else
+//    OPJ_BOOL packet_empty = OPJ_FALSE;
+//#endif
 
     /* <SOP 0xff91> */
     if (tcp->csty & J2K_CP_CSTY_SOP) {
@@ -795,36 +799,40 @@ static OPJ_BOOL opj_t2_encode_packet(OPJ_UINT32 tileno,
     }
     opj_bio_init_enc(bio, c, length);
 
-//    /* Check if the packet is empty */
-//    /* Note: we could also skip that step and always write a packet header */
-//    band = res->bands;
-//    for (bandno = 0; bandno < res->numbands; ++bandno, ++band) {
-//        opj_tcd_precinct_t *prc;
-//        /* Skip empty bands */
-//        if (opj_tcd_is_band_empty(band)) {
-//            continue;
-//        }
-//
-//        prc = &band->precincts[precno];
-//        l_nb_blocks = prc->cw * prc->ch;
-//        cblk = prc->cblks.enc;
-//        for (cblkno = 0; cblkno < l_nb_blocks; cblkno++, ++cblk) {
-//            opj_tcd_layer_t *layer = &cblk->layers[layno];
-//
-//            /* if cblk not included, go to the next cblk  */
-//            if (!layer->numpasses) {
-//                continue;
-//            }
-//            packet_empty = OPJ_FALSE;
-//            break;
-//        }
-//        if (!packet_empty) {
-//            break;
-//        }
-//    }
+#ifdef ENABLE_EMPTY_PACKET_OPTIMIZATION
+    /* WARNING: this code branch is disabled, since it has been reported that */
+    /* such packets cause decoding issues with cinema J2K hardware */
+    /* decoders: https://groups.google.com/forum/#!topic/openjpeg/M7M_fLX_Bco */
 
+    /* Check if the packet is empty */
+    /* Note: we could also skip that step and always write a packet header */
+    band = res->bands;
+    for (bandno = 0; bandno < res->numbands; ++bandno, ++band) {
+        opj_tcd_precinct_t *prc;
+        /* Skip empty bands */
+        if (opj_tcd_is_band_empty(band)) {
+            continue;
+        }
+
+        prc = &band->precincts[precno];
+        l_nb_blocks = prc->cw * prc->ch;
+        cblk = prc->cblks.enc;
+        for (cblkno = 0; cblkno < l_nb_blocks; cblkno++, ++cblk) {
+            opj_tcd_layer_t *layer = &cblk->layers[layno];
+
+            /* if cblk not included, go to the next cblk  */
+            if (!layer->numpasses) {
+                continue;
+            }
+            packet_empty = OPJ_FALSE;
+            break;
+        }
+        if (!packet_empty) {
+            break;
+        }
+    }
+#endif
     opj_bio_write(bio, packet_empty ? 0 : 1, 1);           /* Empty header bit */
-
 
     /* Writing Packet header */
     band = res->bands;
