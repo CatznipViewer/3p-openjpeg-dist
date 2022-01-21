@@ -2,7 +2,7 @@
 
 cd "$(dirname "$0")"
 
-# turn on verbose debugging output for parabuild logs.
+# turn on verbose debugging output
 exec 4>&1; export BASH_XTRACEFD=4; set -x
 # make errors fatal
 set -e
@@ -10,27 +10,23 @@ set -e
 set -u
 
 OPENJPEG_SOURCE_DIR="openjpeg"
-#define OPENJPEG_VERSION "2.0.0"
 OPENJPEG_VERSION="$(awk '/OPENJPEG_VERSION/ { print $3 }' \
                         "$OPENJPEG_SOURCE_DIR/src/lib/openjp2/openjpeg.h" | \
                     tr -d '"')"
 
-if [ -z "$AUTOBUILD" ] ; then 
+# check autobuild is around or fail
+if [ -z "$AUTOBUILD" ] ; then
     exit 1
-fi
-
-if [ "$OSTYPE" = "cygwin" ] ; then
-    autobuild="$(cygpath -u $AUTOBUILD)"
-else
-    autobuild="$AUTOBUILD"
 fi
 
 stage="$(pwd)/stage"
 
 # load autobuild provided shell functions and variables
 source_environment_tempfile="$stage/source_environment.sh"
-"$autobuild" source_environment > "$source_environment_tempfile"
+"$AUTOBUILD" source_environment > "$source_environment_tempfile"
+set +x
 . "$source_environment_tempfile"
+set -x
 
 build=${AUTOBUILD_BUILD_ID:=0}
 echo "${OPENJPEG_VERSION}.${build}" > "${stage}/VERSION.txt"
@@ -40,15 +36,17 @@ pushd "$OPENJPEG_SOURCE_DIR"
         windows*)
             load_vsvars
 
-            cmake . -G "$AUTOBUILD_WIN_CMAKE_GEN" -DCMAKE_INSTALL_PREFIX=$stage \
-                    -DCMAKE_C_FLAGS="$LL_BUILD_RELEASE"
+            cmake.exe . -G "$AUTOBUILD_WIN_CMAKE_GEN" -A "$AUTOBUILD_WIN_CMAKE_PLAT" -DCMAKE_INSTALL_PREFIX=$stage -DCMAKE_C_FLAGS="$LL_BUILD_RELEASE" -DCMAKE_SHARED_LINKER_FLAGS_RELEASE="/DEBUG /OPT:REF /OPT:ICF"
 
             build_sln "OPENJPEG.sln" "Release|$AUTOBUILD_WIN_VSPLATFORM" "openjp2"
             mkdir -p "$stage/lib/release"
-
             cp bin/Release/openjp2{.dll,.lib,.pdb} "$stage/lib/release"
-            mkdir -p "$stage/include/openjpeg"
 
+            build_sln "OPENJPEG.sln" "Debug|$AUTOBUILD_WIN_VSPLATFORM" "openjp2"
+            mkdir -p "$stage/lib/debug"
+            cp bin/Debug/openjp2{.dll,.lib,.pdb} "$stage/lib/debug"			
+
+            mkdir -p "$stage/include/openjpeg"
             cp src/lib/openjp2/openjpeg.h "$stage/include/openjpeg/"
             cp src/lib/openjp2/opj_config.h "$stage/include/openjpeg/"
             cp src/lib/openjp2/opj_stdint.h "$stage/include/openjpeg/"
