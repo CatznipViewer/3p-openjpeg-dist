@@ -1,0 +1,73 @@
+name: Build package
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  AUTOBUILD_VARIABLES_FILE: ${{github.workspace}}/dep/build-variables/variables
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [windows-latest]
+        address_size: [64]
+        include:
+          - os: windows-latest
+            address_size: 32
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Check out autobuild
+      uses: actions/checkout@v2
+      with:
+        repository: catznip/autobuild
+        ref: main
+        path: 'dep/autobuild'
+        token: ${{ secrets.AUTH_PAT }}
+
+    - name: Check out build-variables
+      uses: actions/checkout@v2
+      with:
+        repository: catznip/build-variables
+        ref: catznip/release
+        path: 'dep/build-variables'
+        token: ${{ secrets.AUTH_PAT }}
+
+    - name: Check out action-scp
+      uses: actions/checkout@v2
+      with:
+        repository: catznip/action-scp
+        ref: main
+        path: 'dep/action-scp'
+        token: ${{ secrets.AUTH_PAT }}
+
+    - name: Install Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '2.x'
+        architecture: 'x64'
+
+    - name: Install autobuild
+      run: pip install "dep/autobuild"
+
+    - name: Run autobuild configure
+      run: autobuild configure --address-size ${{ matrix.address_size }}
+
+    - name: Run autobuild build
+      run: autobuild build --address-size ${{ matrix.address_size }}
+
+    - name: Run autobuild package
+      run: autobuild package --address-size ${{ matrix.address_size }}
+
+    - name: Publish package
+      uses: ./dep/action-scp
+      with:
+        key: ${{ secrets.SCP_KEY }}
+        source_file: './*.tar.bz2'
+        destination_host: ${{ secrets.SCP_HOST }}
+        destination_username: ${{ secrets.SCP_USER }}
+        destination_file: '/'
