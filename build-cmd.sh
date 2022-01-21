@@ -38,11 +38,11 @@ pushd "$OPENJPEG_SOURCE_DIR"
 
             cmake.exe . -G "$AUTOBUILD_WIN_CMAKE_GEN" -A "$AUTOBUILD_WIN_CMAKE_PLAT" -DCMAKE_INSTALL_PREFIX=$stage -DCMAKE_C_FLAGS="$LL_BUILD_RELEASE" -DCMAKE_SHARED_LINKER_FLAGS_RELEASE="/DEBUG /OPT:REF /OPT:ICF"
 
-            msbuild.exe "OPENJPEG.sln" /p:Configuration="Release" /p:Platform="$AUTOBUILD_WIN_VSPLATFORM" /t:openjp2 
+            MSYS_NO_PATHCONV=1 msbuild.exe "OPENJPEG.sln" /p:Configuration="Release" /p:Platform="$AUTOBUILD_WIN_VSPLATFORM" /t:openjp2 
             mkdir -p "$stage/lib/release"
             cp bin/Release/openjp2{.dll,.lib,.pdb} "$stage/lib/release"
 
-            msbuild.exe "OPENJPEG.sln" /p:Configuration="Debug" /p:Platform="$AUTOBUILD_WIN_VSPLATFORM" /t:openjp2
+            MSYS_NO_PATHCONV=1 msbuild.exe "OPENJPEG.sln" /p:Configuration="Debug" /p:Platform="$AUTOBUILD_WIN_VSPLATFORM" /t:openjp2
             mkdir -p "$stage/lib/debug"
             cp bin/Debug/openjp2{.dll,.lib,.pdb} "$stage/lib/debug"
 
